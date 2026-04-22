@@ -63,6 +63,7 @@ def extract_temporal_features(subtitles):
         return {}
 
     pauses = []
+    response_latencies = []
     speech_rates = []
     turn_lengths = []
     overlaps = 0
@@ -84,8 +85,10 @@ def extract_temporal_features(subtitles):
             overlaps += 1
         else:
             pauses.append(gap)
+            response_latencies.append(gap)
 
     pause_series = pd.Series(pauses, dtype="float64")
+    response_latency_series = pd.Series(response_latencies, dtype="float64")
     speech_series = pd.Series(speech_rates, dtype="float64")
     turn_series = pd.Series(turn_lengths, dtype="float64")
 
@@ -94,6 +97,7 @@ def extract_temporal_features(subtitles):
         "pause_median_sec": pause_series.median(),
         "pause_std_sec": pause_series.std(),
         "pause_count": len(pauses),
+        "response_latency_mean_sec": response_latency_series.mean(),
         "overlap_count": overlaps,
         "overlap_rate": overlaps / max(1, len(subtitles) - 1),
         "speech_rate_mean_wps": speech_series.mean(),

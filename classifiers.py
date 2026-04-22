@@ -19,14 +19,12 @@ TEMPORAL_FEATURES = [
     "pause_median_sec",
     "pause_std_sec",
     "pause_count",
-    "overlap_count",
-    "overlap_rate",
+    "response_latency_mean_sec",
     "speech_rate_mean_wps",
     "speech_rate_median_wps",
     "turn_len_mean_words",
     "turn_len_median_words",
     "n_turns",
-    "total_words",
 ]
 
 LEXICAL_FEATURES = [
@@ -34,8 +32,10 @@ LEXICAL_FEATURES = [
     "avg_sent_length",
     "type_token_ratio",
     "flesch_reading_ease",
+    "sent_len_variance",
     "formality_score",
-    "avg_dep_depth",
+    "contraction_rate",
+    "lexical_drift",
 ]
 
 

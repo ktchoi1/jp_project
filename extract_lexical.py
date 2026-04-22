@@ -4,6 +4,16 @@ import re
 import pandas as pd
 
 
+CONTRACTIONS = re.compile(
+    r"\b(i'm|i've|i'll|i'd|you're|you've|you'll|you'd|he's|he'll|he'd|"
+    r"she's|she'll|she'd|it's|it'll|we're|we've|we'll|we'd|they're|they've|"
+    r"they'll|they'd|don't|doesn't|didn't|won't|wouldn't|can't|couldn't|"
+    r"shouldn't|isn't|aren't|wasn't|weren't|haven't|hasn't|hadn't|"
+    r"that's|that'll|what's|who's|there's|here's|let's|how's|where's)\b",
+    re.IGNORECASE,
+)
+
+
 NOVEL_FILES = {
     "first_novel": ("(insert dialogue csv path here)", 0, "novel"),
     "second_novel": ("(insert dialogue csv path here)", 0, "novel"),
@@ -121,14 +131,39 @@ def lexical_features_from_texts(texts, nlp):
         dep_depths.append(dependency_depth(token))
 
     # i used ai to help sanity check this part because spacy parses can get messy idk it was breaking
-    formality_score = (pos_counts.get("NOUN", 0) + pos_counts.get("ADJ", 0)) / max(1, len(tokens))
+    # using the actual heylighen and dewaele formality formula here now
+    noun_pct = pos_counts.get("NOUN", 0) / max(1, len(tokens)) * 100
+    adjective_pct = pos_counts.get("ADJ", 0) / max(1, len(tokens)) * 100
+    preposition_pct = pos_counts.get("ADP", 0) / max(1, len(tokens)) * 100
+    article_pct = pos_counts.get("DET", 0) / max(1, len(tokens)) * 100
+    pronoun_pct = pos_counts.get("PRON", 0) / max(1, len(tokens)) * 100
+    verb_pct = pos_counts.get("VERB", 0) / max(1, len(tokens)) * 100
+    adverb_pct = pos_counts.get("ADV", 0) / max(1, len(tokens)) * 100
+    interjection_pct = pos_counts.get("INTJ", 0) / max(1, len(tokens)) * 100
+    formality_score = (
+        noun_pct
+        + adjective_pct
+        + preposition_pct
+        + article_pct
+        - pronoun_pct
+        - verb_pct
+        - adverb_pct
+        - interjection_pct
+        + 100
+    ) / 2
+
+    # added these in because they are in the paper writeup / feature list
+    sentence_length_variance = pd.Series(sentence_lengths, dtype="float64").var()
+    contraction_rate = len(CONTRACTIONS.findall(full_text)) / max(1, len(words))
 
     return {
         "avg_word_length": pd.Series(word_lengths, dtype="float64").mean(),
         "avg_sent_length": pd.Series(sentence_lengths, dtype="float64").mean(),
         "type_token_ratio": len(set(words)) / max(1, len(words)),
         "flesch_reading_ease": flesch_reading_ease(full_text[:500_000]),
+        "sent_len_variance": sentence_length_variance,
         "formality_score": formality_score,
+        "contraction_rate": contraction_rate,
         "avg_dep_depth": pd.Series(dep_depths, dtype="float64").mean(),
         "total_tokens": len(tokens),
     }
